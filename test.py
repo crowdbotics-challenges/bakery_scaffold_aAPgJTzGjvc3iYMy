@@ -2,6 +2,8 @@ import os
 import re
 import unittest
 
+from webdriver_manager.chrome import ChromeDriverManager
+
 import selenium
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -17,7 +19,7 @@ class TestAcceptanceStripe(unittest.TestCase):
 
     def test_acceptance_stripe_public_key_has_been_set(self):
         """Check if Stripe key was defined."""
-        pattern = re.compile(r"Stripe\('pk_test_\w{24}'\);", re.I | re.M)
+        pattern = re.compile(r"Stripe\('pk_test_\w+'\);", re.I | re.M)
         res = re.search(pattern, self.dom_str)
         self.assertTrue(hasattr(res, 'group'), msg="You didn't define the Stripe key.")
 
@@ -32,7 +34,7 @@ class TestAcceptanceStripe(unittest.TestCase):
     def test_acceptance_checkout_button_was_instantiated(self):
         """Check if checkout button was captured."""
         pattern = re.compile(
-            r"document.getElementById\('checkout-button-sku_\w{14}'\);", re.I | re.M)
+            r"document.getElementById\('checkout-button-sku_'\);", re.I | re.M)
         res = re.search(pattern, self.dom_str)
         self.assertTrue(hasattr(res, 'group'),
                         msg="You didn't add a checkout button.")
@@ -59,7 +61,7 @@ class TestAcceptanceStripe(unittest.TestCase):
         res = re.search(pattern, self.dom_str)
         self.assertTrue(hasattr(res, 'group'), msg="You didn't define a success URL.")
 
-    # Check if cancelUrl redirects to order.ht
+    # Check if cancelUrl redirects to order.html
     def test_acceptance_cancel_url(self):
         pattern = re.compile(r"cancelUrl: \'(http|https)://(.*)/order.html\'",
                              re.I | re.M)
@@ -69,6 +71,7 @@ class TestAcceptanceStripe(unittest.TestCase):
 
 class AssessmentTestCases(unittest.TestCase):
     def setUp(self):
+
         with open("order.html", "r") as file_descriptor:
             self.dom_str = file_descriptor.read()
 
@@ -82,9 +85,7 @@ class AssessmentTestCases(unittest.TestCase):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
 
-        self.driver = webdriver.Chrome(
-            executable_path=CHROMEDRIVER_PATH, options=options
-        )
+        self.driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
     def _get_button_id(self):
         pattern = re.compile(r"\('checkout-button-sku_'\);", re.I | re.M)
@@ -116,7 +117,7 @@ class AssessmentTestCases(unittest.TestCase):
 
         try:
             zip_elem = self.driver.find_element_by_id('billingPostalCode')
-        except NoSuchElementException:
+        except:
             zip_elem = None
 
         email_elem.send_keys("assessment@test.com.br")
@@ -140,6 +141,18 @@ class AssessmentTestCases(unittest.TestCase):
 
     def tearDown(self):
         self.driver.close()
- 
-if __name__ == '__main__':
+
+
+    
+
+class TestSubmission(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(TestSubmission, self).__init__(*args, **kwargs)
+        with open('order.html', 'r') as file_descriptor:
+            self.dom_str = file_descriptor.read()
+
+    
+
+
+if __name__ == "__main__":
     unittest.main()
